@@ -40,7 +40,7 @@ jobs:
 
       - name: GitOps registry manifest update ("The GitOps Bump")
         env:
-          GITOPS_REPO: "YOUR_USERNAME/gitops-repo" # Update to your target user/repo
+          GITOPS_REPO: "https://github.com/Akshatha-wq/gitops-repo" # Update to your target user/repo
           NEW_TAG: "latest"
         run: |
           git config --global user.name "github actions automation"
