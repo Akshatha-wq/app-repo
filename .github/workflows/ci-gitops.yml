@@ -1,5 +1,4 @@
 name : Continuous Integration and GitOps Bump
-
 on:
   push:
     branches:
