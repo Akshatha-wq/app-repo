@@ -1,0 +1,57 @@
+name : Continuous Integration and GitOps Bump
+
+on:
+  push:
+    branches:
+      - main # Triggers when developers push or merge code to main [cite: 22]
+
+permissions:
+    id-token: write
+    contents: read
+    
+jobs:
+    build-and-ship:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Code Checkout
+              uses: actions/checkout@v4
+
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: us-east-2
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Build and push Image to ECR
+              env:
+                ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                ECR_REPOSITORY: my-app
+                IMAGE_TAG: latest
+              run: |
+                docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+            - name: GitOps registry manifest update ("The GitOps Bump")
+              env: 
+                GITOPS_REPO: "YOUR_USERNAME/gitops-repo" # Update to your target user/repo
+                NEW_TAG: "latest"
+              run: |
+                git config --global user.name "github actions automation"    
+                git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+                # Clone the distinct environment config repository [cite: 24]
+                git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/${{ env.GITOPS_REPO }}.git gitops-env
+                cd gitops-env
+
+                # Install yq dynamically to update values.yaml with the new image tag [cite: 24]
+                yq -i ".image.tag = \"${{ env.NEW_TAG }}\"" charts/my-app/values.yaml
+                
+                # Stage the modification, commit, and push upstream to trigger reconciliation [cite: 2, 24]
+                git add charts/my-app/values.yaml
+                git commit -m "Update image tag to ${{ env.NEW_TAG }} via GitOps Bump"
+                git push origin main
