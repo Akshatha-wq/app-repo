@@ -7,7 +7,7 @@ app = Flask(__name__)
 def home():
     return jsonify({
         "status": "success",
-        "message": "Welcome to our GitOps Deployable App Container Engine!",
+        "message": "Welcome to our GitOps Deployable App Container Engine!, this is a test app for GitOps deployment",
         "environment": os.getenv("ENVIRONMENT", "production"),
         "version": "1.0.0"
     }), 200
