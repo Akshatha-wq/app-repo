@@ -61,3 +61,4 @@ jobs:
             git add charts/my-app/values.yaml
             git commit -m "chore(deploy): push new version tag ${{ env.NEW_TAG }} [skip ci]"
             git push origin main
+            fi
