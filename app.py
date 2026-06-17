@@ -10,7 +10,7 @@ def home():
         "status": "success",
         "message": "Welcome to our GitOps Deployable App Container Engine!, this is a test app for GitOps deployment",
         "environment": os.getenv("ENVIRONMENT", "production"),
-        "version": "1.0.0"
+        "version": "2.0.0"
     }), 200
 
 @app.route('/healthz')
