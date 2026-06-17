@@ -5,11 +5,11 @@ import os
 app = Flask(__name__)
 
 @app.route('/')
-def home()
+def home():
     return jsonify({
         "status": "success",
         "message": "Welcome to our GitOps Deployable App Container Engine!, this is a test app for GitOps deployment",
-        "environment": os.getenv("ENVIRONMENT", "production"),
+        "environment": os.getenv("ENVIRONMENT", "production")
         "version": "2.0.0"
     }), 200
 
