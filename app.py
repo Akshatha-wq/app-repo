@@ -9,8 +9,8 @@ def home():
     return jsonify({
         "status": "success",
         "message": "Welcome to our GitOps Deployable App Container Engine!, this is a test app for GitOps deployment",
-        "environment": os.getenv("ENVIRONMENT", "production")
-        "version": "2.0.0"
+        "environment": os.getenv("ENVIRONMENT", "production"),
+        "version": "3.0.0",
     }), 200
 
 @app.route('/healthz')
