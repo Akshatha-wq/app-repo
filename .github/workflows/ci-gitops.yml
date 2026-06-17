@@ -1,4 +1,4 @@
-name : Continuous Integration and GitOps Bump
+name: Continuous Integration and GitOps Bump
 on:
   push:
     branches:
@@ -7,7 +7,6 @@ on:
 permissions:
   id-token: write
   contents: read
-    
 jobs:
   build-and-ship:
     runs-on: ubuntu-latest
@@ -34,9 +33,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: my-app
           IMAGE_TAG: latest
+        # Ensure your build step uses the exact same SHA token for ECR packaging:
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
 
       - name: GitOps registry manifest update ("The GitOps Bump")
         env:
@@ -53,12 +53,7 @@ jobs:
           # Install yq dynamically to update values.yaml with the new image tag [cite: 24]
           yq -i ".image.tag = \"${{ env.NEW_TAG }}\"" charts/my-app/values.yaml
 
-          # Check if yq actually modified the file before committing
-          if git diff --exit-code charts/my-app/values.yaml; then
-            echo "No changes detected. Image tag is already up to date."
-          else
-            echo "Changes detected! Committing new image tag..."
-            git add charts/my-app/values.yaml
-            git commit -m "chore(deploy): push new version tag ${{ env.NEW_TAG }} [skip ci]"
-            git push origin main
-          fi
+          # Stage the modification, commit, and push upstream to trigger reconciliation [cite: 2, 24]
+          git add charts/my-app/values.yaml
+          git commit -m "Update image tag to ${{ env.NEW_TAG }} via GitOps Bump"
+          git push origin main
