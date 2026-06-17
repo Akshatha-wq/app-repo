@@ -41,7 +41,7 @@ jobs:
       - name: GitOps registry manifest update ("The GitOps Bump")
         env:
           GITOPS_REPO: "Akshatha-wq/gitops-repo" # Update to your target user/repo
-          NEW_TAG: "latest"
+          NEW_TAG: ${{ github.sha }}
         run: |
           git config --global user.name "github actions automation"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -53,7 +53,12 @@ jobs:
           # Install yq dynamically to update values.yaml with the new image tag [cite: 24]
           yq -i ".image.tag = \"${{ env.NEW_TAG }}\"" charts/my-app/values.yaml
 
-          # Stage the modification, commit, and push upstream to trigger reconciliation [cite: 2, 24]
+          # 2. Inject a dynamic build timestamp metadata field 
+          # This forces a file state delta on EVERY run, preventing "working tree clean" blocks [cite: 470]
+          yq -i ".deploymentTimestamp = \"$(date +'%Y-%m-%dT%H:%M:%S')\"" charts/my-app/values.yaml
+          
+          # 3. Explicitly stage, commit, and push the fresh state [cite: 24]
+          echo "Pushing fresh manifest adjustments for version tag ${{ env.NEW_TAG }}..."
           git add charts/my-app/values.yaml
-          git commit -m "Update image tag to ${{ env.NEW_TAG }} via GitOps Bump"
+          git commit -m "chore(deploy): push new version tag ${{ env.NEW_TAG }} [skip ci]"
           git push origin main
