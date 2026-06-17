@@ -53,7 +53,11 @@ jobs:
           # Install yq dynamically to update values.yaml with the new image tag [cite: 24]
           yq -i ".image.tag = \"${{ env.NEW_TAG }}\"" charts/my-app/values.yaml
 
-          # Stage the modification, commit, and push upstream to trigger reconciliation [cite: 2, 24]
-          git add charts/my-app/values.yaml
-          git commit -m "Update image tag to ${{ env.NEW_TAG }} via GitOps Bump"
-          git push origin main
+          # Check if yq actually modified the file before committing
+          if git diff --exit-code charts/my-app/values.yaml; then
+            echo "No changes detected. Image tag is already up to date."
+          else
+            echo "Changes detected! Committing new image tag..."
+            git add charts/my-app/values.yaml
+            git commit -m "chore(deploy): push new version tag ${{ env.NEW_TAG }} [skip ci]"
+            git push origin main
